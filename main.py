@@ -16,9 +16,6 @@ except ImportError:
         exit()
     else:
         print("All libraries successfully installed!")
-
-# from base_app import BaseApp
-
 print("All libraries successfully imported!")
 
 pygame.init()
@@ -44,7 +41,7 @@ class Player(pygame.sprite.Sprite):
 
 
 class Tile(pygame.sprite.Sprite):
-    def __init__(self, rect: Rect, pos: pygame.Vector2 = None):
+    def __init__(self, rect: Rect):
         super().__init__()
         self.rect = rect
         self.surface = pygame.surface.Surface((self.rect.width, self.rect.height))

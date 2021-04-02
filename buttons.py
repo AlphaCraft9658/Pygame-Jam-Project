@@ -25,7 +25,7 @@ if __name__ == "__main__":
     click = pygame.mixer.Sound("aud/sounds/plastic click.wav")
 buttons = pygame.sprite.Group()
 
-
+COLOR = Union[pygame.Color, Tuple[int, int, int], Tuple[int, int, int, int]]
 # define class for clickable buttons
 class Button(pygame.sprite.Sprite):
     # don't forget to import pygame to use this system yourself
@@ -34,14 +34,15 @@ class Button(pygame.sprite.Sprite):
     # click_sound (valid Sound object)
     # (text, (text r, g, b), size, font), event
     # pass a separate declared function or a lambda for "event" to make it work the way you want
-    def __init__(self, surface: pygame.Surface, box: Rect = Rect(0, 0, 100, 50), border: tuple = (5, 5),
-                 colors: tuple[Color, Color, Color, Color, Color, Color] =
+    def __init__(self, surface: pygame.Surface, box: Union[Rect, Tuple[int, int, int, int]] = Rect(0, 0, 100, 50),
+                 border: Tuple[int, int] = (5, 5),
+                 colors: Tuple[COLOR, COLOR, COLOR, COLOR, COLOR, COLOR] =
                  ((225, 225, 225), (200, 200, 200),
                  (180, 180, 180), (180, 180, 180),
                  (170, 170, 170), (130, 130, 130)),
                  click_sound: pygame.mixer.Sound = None,
                  text: tuple[str, Color] = None,
-                 sys_font: pygame.font.Font = None,
+                 sys_font: pygame.font.SysFont = None,
                  custom_font: pygame.font.Font = None,
                  click_event=(lambda: print("Button Pressed"))):
         super().__init__()
@@ -120,7 +121,6 @@ def button_check(ev):
                 b.clicked = False
         else:
             b.hover = False
-
 
 if __name__ == "__main__":
     button = Button(screen, Rect(500, 250, 200, 100), click_sound=click, text=("Test", Color(0, 0, 0)), custom_font=pygame.font.SysFont("Arial", True, 14))
