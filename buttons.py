@@ -1,3 +1,4 @@
+from typing import Tuple, Union, Optional
 try:
     import pygame
     from pygame.locals import *
@@ -27,6 +28,8 @@ buttons = pygame.sprite.Group()
 
 COLOR = Union[pygame.Color, Tuple[int, int, int], Tuple[int, int, int, int]]
 # define class for clickable buttons
+
+
 class Button(pygame.sprite.Sprite):
     # don't forget to import pygame to use this system yourself
     # pass arguments this way: ((button x, button y, button width, height), (border width, radius), ((button r, g, b),/
@@ -122,9 +125,13 @@ def button_check(ev):
         else:
             b.hover = False
 
+
 if __name__ == "__main__":
-    button = Button(screen, Rect(500, 250, 200, 100), click_sound=click, text=("Test", Color(0, 0, 0)), custom_font=pygame.font.SysFont("Arial", True, 14))
-    button2 = Button(screen, Rect(350, 250, 100, 50), click_sound=click, text=("Test123", Color(0, 0, 0)), custom_font=pygame.font.SysFont("Arial", True, 14), click_event=(lambda: print("Test123")))
+    # noinspection PyUnboundLocalVariable
+    button = Button(screen, Rect(500, 250, 200, 100), click_sound=click, text=("Test", Color(0, 0, 0)),
+                    sys_font=pygame.font.SysFont("Arial", True, 14), colors=((255, 0, 0, 100), (255, 255, 0), (255, 0, 0), (255, 255, 0), (255, 0, 0), (255, 255, 0)))
+    button2 = Button(screen, Rect(350, 250, 100, 50), click_sound=click, text=("Test123", Color(0, 0, 0)),
+                     sys_font=pygame.font.SysFont("Arial", True, 14), click_event=(lambda: print("Test123")))
     run_b = True
     while run_b:
         for event_b in pygame.event.get():
