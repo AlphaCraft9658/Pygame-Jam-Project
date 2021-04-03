@@ -23,13 +23,17 @@ pygame.init()
 if __name__ == "__main__":
     screen = pygame.display.set_mode((1000, 500))
     pygame.display.set_caption("Pygame Button Test")
-    click = pygame.mixer.Sound("aud/sounds/plastic click.wav")
+    click = pygame.mixer.Sound("aud/sounds/click.wav")
 buttons = pygame.sprite.Group()
 
+
 COLOR = Union[pygame.Color, Tuple[int, int, int], Tuple[int, int, int, int]]
+mouse_click = False
+mouse_was_clicked = True
+hover = False
+
+
 # define class for clickable buttons
-
-
 class Button(pygame.sprite.Sprite):
     # don't forget to import pygame to use this system yourself
     # pass arguments this way: ((button x, button y, button width, height), (border width, radius), ((button r, g, b),/
@@ -43,10 +47,9 @@ class Button(pygame.sprite.Sprite):
                  ((225, 225, 225), (200, 200, 200),
                  (180, 180, 180), (180, 180, 180),
                  (170, 170, 170), (130, 130, 130)),
-                 click_sound: pygame.mixer.Sound = None,
-                 text: tuple[str, Color] = None,
-                 sys_font: pygame.font.SysFont = None,
-                 custom_font: pygame.font.Font = None,
+                 click_sound: Optional[pygame.mixer.Sound] = None,
+                 text: Optional[Tuple[str, Color]] = None,
+                 font: Optional[Union[pygame.font.SysFont, pygame.font.Font]] = None,
                  click_event=(lambda: print("Button Pressed"))):
         super().__init__()
         self.screen = surface
@@ -63,27 +66,17 @@ class Button(pygame.sprite.Sprite):
         if text:
             self.text = text[0]
             self.text_color = text[1]
-            self.font = None
-            self.custom_font = None
-            self.default_font = None
-            if sys_font:
-                self.font = sys_font
-            elif custom_font:
-                self.custom_font = custom_font
+            if type(font) is not None:
+                self.font = font
             else:
-                self.default_font = pygame.font.SysFont("Arial", (self.rect.width // len(self.text)))
+                self.font = pygame.font.SysFont("Arial", (self.rect.width // len(self.text)))
         self.clicked = False
         self.hover = False
         self.click_event = click_event
         buttons.add(self)
 
         if text:
-            if self.font:
-                self.text_rendered = self.font.render(self.text, True, self.text_color)
-            elif self.custom_font:
-                self.text_rendered = self.custom_font.render(self.text, True, self.text_color)
-            else:
-                self.text_rendered = self.default_font.render(self.text, True, self.text_color)
+            self.text_rendered = self.font.render(self.text, True, self.text_color)
             self.text_rect = self.text_rendered.get_rect()
             self.text_rect.center = self.rect.center
 
@@ -91,26 +84,26 @@ class Button(pygame.sprite.Sprite):
         if self.clicked:
             pygame.draw.rect(self.screen, self.click_color, self.rect)
             pygame.draw.rect(self.screen, self.border_click_color, self.rect, self.border_radius)
-        elif self.hover:
+        elif self.hover and not mouse_click:
             pygame.draw.rect(self.screen, self.hover_color, self.rect)
             pygame.draw.rect(self.screen, self.border_hover_color, self.rect, self.border_radius)
         else:
             pygame.draw.rect(self.screen, self.color, self.rect)
             pygame.draw.rect(self.screen, self.border_color, self.rect, self.border_radius)
         if self.text:
-            if self.font:
-                self.text_rendered = self.font.render(self.text, True, self.text_color)
-            elif self.custom_font:
-                self.text_rendered = self.custom_font.render(self.text, True, self.text_color)
-            else:
-                self.text_rendered = self.default_font.render(self.text, True, self.text_color)
+            self.text_rendered = self.font.render(self.text, True, self.text_color)
             self.text_rect = self.text_rendered.get_rect()
             self.text_rect.center = self.rect.center
             self.screen.blit(self.text_rendered, self.text_rect)
 
 
 def button_check(ev):
+    global mouse_click, mouse_was_clicked
     for b in buttons:
+        if ev.type == MOUSEBUTTONDOWN:
+            mouse_click = True
+        if ev.type == MOUSEBUTTONUP:
+            mouse_click = False
         if b.rect.collidepoint(pygame.mouse.get_pos()):
             b.hover = True
             if ev.type == pygame.MOUSEBUTTONDOWN:
@@ -118,20 +111,21 @@ def button_check(ev):
                     b.clicked = True
                     if b.click_sound:
                         b.click_sound.play()
-                    else:
-                        b.clicked = False
-            else:
-                b.clicked = False
+            if ev.type == pygame.MOUSEBUTTONUP:
+                if ev.button == 1:
+                    b.clicked = False
         else:
+            b.clicked = False
             b.hover = False
 
 
 if __name__ == "__main__":
     # noinspection PyUnboundLocalVariable
     button = Button(screen, Rect(500, 250, 200, 100), click_sound=click, text=("Test", Color(0, 0, 0)),
-                    sys_font=pygame.font.SysFont("Arial", True, 14), colors=((255, 0, 0, 100), (255, 255, 0), (255, 0, 0), (255, 255, 0), (255, 0, 0), (255, 255, 0)))
+                    font=pygame.font.SysFont("Arial", 42), colors=((255, 0, 0, 100), (255, 255, 0), (255, 0, 0),
+                                                                   (255, 255, 0), (255, 0, 0), (255, 255, 0)))
     button2 = Button(screen, Rect(350, 250, 100, 50), click_sound=click, text=("Test123", Color(0, 0, 0)),
-                     sys_font=pygame.font.SysFont("Arial", True, 14), click_event=(lambda: print("Test123")))
+                     font=pygame.font.SysFont("Arial", 14), click_event=(lambda: print("Test123")))
     run_b = True
     while run_b:
         for event_b in pygame.event.get():
