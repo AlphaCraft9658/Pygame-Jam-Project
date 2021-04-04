@@ -25,9 +25,9 @@ clock = pygame.time.Clock()
 pygame.display.set_caption("Pygame Jam Game")
 
 
-def check_for_collisions(rect: Rect):
+def check_for_collisions(rect: Union[Rect, Tuple[int, int, int, int]], tiles_: []):
     collisions = []
-    for tile in tiles:
+    for tile in tiles_:
         if rect.colliderect(tile):
             collisions.append(tile)
     return collisions
@@ -37,7 +37,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.rect = Rect(0, 0, 50, 50)
-        self.surface = pygame.surface.Surface(screen.get_rect())
+        self.surface = pygame.surface.Surface((screen.get_width(), screen.get_height()))
         self.xVel = 0
         self.yVel = 0
         self.left = False
@@ -51,21 +51,21 @@ class Player(pygame.sprite.Sprite):
         return self.surface
 
     def update(self):  # physics
-        collisions = check_for_collisions(self.rect)
+        collisions = check_for_collisions(self.rect, tiles)
         self.rect.x += self.xVel
         for tile in collisions:
-            if self.rect.right > tile.rect.left:
+            if self.xVel > 0:
                 self.rect.right = tile.rect.left
-            elif self.rect.left < tile.rect.right:
+            if self.xVel < 0:
                 self.rect.left = tile.rect.right
-
-        self.rect.y += self.yVel
+        self.rect.y -= self.yVel
         for tile in collisions:
-            if self.rect.top < tile.rect.bottom:
-                self.rect.top = tile.rect.bottom
-            elif self.rect.bottom > tile.rect.top:
+            if self.yVel < 0:
                 self.rect.bottom = tile.rect.top
-        if len(collisions) > 0:
+            if self.yVel > 0:
+                self.rect.top = tile.rect.bottom
+
+        if len(collisions) >= 1:
             self.xVel = 0
             self.yVel = 0
         else:
@@ -74,9 +74,9 @@ class Player(pygame.sprite.Sprite):
 
 
 class Tile(pygame.sprite.Sprite):
-    def __init__(self, rect: Rect):
+    def __init__(self, rect: Union[Rect, Tuple[int, int, int, int]]):
         super().__init__()
-        self.rect = rect
+        self.rect = Rect(rect)
         self.surface = pygame.surface.Surface((self.rect.width, self.rect.height))
         pygame.draw.rect(self.surface, (255, 255, 255), (0, 0, self.rect.width, self.rect.height))
         self.surface.set_colorkey((0, 0, 0))
@@ -91,7 +91,7 @@ player = Player()
 player_group = pygame.sprite.Group(player)
 tiles = []
 tiles_group = pygame.sprite.Group()
-tiles.append(Tile(Rect(0, screen.get_height() - 20, screen.get_width(), 20)))
+tiles.append(Tile((0, screen.get_height() - 20, screen.get_width(), 20)))
 run = True
 while run:
     for event in pygame.event.get():
