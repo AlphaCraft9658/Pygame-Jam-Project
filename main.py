@@ -16,6 +16,7 @@ except ImportError:
         exit()
     else:
         print("All libraries successfully installed!")
+from typing import Union, Tuple, Optional
 print("All libraries successfully imported!")
 
 pygame.init()
@@ -24,11 +25,24 @@ clock = pygame.time.Clock()
 pygame.display.set_caption("Pygame Jam Game")
 
 
+def check_for_collisions(rect: Rect):
+    collisions = []
+    for tile in tiles:
+        if rect.colliderect(tile):
+            collisions.append(tile)
+    return collisions
+
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.rect = Rect(0, 0, 50, 50)
-        self.surface = pygame.surface.Surface((50, 50))
+        self.surface = pygame.surface.Surface(screen.get_rect())
+        self.xVel = 0
+        self.yVel = 0
+        self.left = False
+        self.right = False
+        self.up = False
         pygame.draw.rect(self.surface, (255, 0, 0), self.rect)
         self.surface.set_colorkey((0, 0, 0))
 
@@ -37,7 +51,26 @@ class Player(pygame.sprite.Sprite):
         return self.surface
 
     def update(self):  # physics
-        pass
+        collisions = check_for_collisions(self.rect)
+        self.rect.x += self.xVel
+        for tile in collisions:
+            if self.rect.right > tile.rect.left:
+                self.rect.right = tile.rect.left
+            elif self.rect.left < tile.rect.right:
+                self.rect.left = tile.rect.right
+
+        self.rect.y += self.yVel
+        for tile in collisions:
+            if self.rect.top < tile.rect.bottom:
+                self.rect.top = tile.rect.bottom
+            elif self.rect.bottom > tile.rect.top:
+                self.rect.bottom = tile.rect.top
+        if len(collisions) > 0:
+            self.xVel = 0
+            self.yVel = 0
+        else:
+            self.xVel *= 0.8
+            self.yVel -= 1
 
 
 class Tile(pygame.sprite.Sprite):
@@ -64,6 +97,20 @@ while run:
     for event in pygame.event.get():
         if event.type == QUIT:
             run = False
+        if event.type == KEYDOWN:
+            if event.key == K_LEFT:
+                player.left = True
+            if event.key == K_RIGHT:
+                player.right = True
+            if event.key == K_UP:
+                player.up = True
+        if event.type == KEYUP:
+            if event.key == K_LEFT:
+                player.left = False
+            if event.key == K_RIGHT:
+                player.right = False
+            if event.key == K_UP:
+                player.up = False
 
     screen.fill((0, 0, 0))
     player_group.update()
