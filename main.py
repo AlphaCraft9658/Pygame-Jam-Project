@@ -27,6 +27,8 @@ pygame.display.set_caption("Pygame Jam Game")
 
 def check_for_collisions(rect: Union[Rect, Tuple[int, int, int, int]], tiles_: []):
     collisions = []
+    if not isinstance(rect, Rect):
+        rect = Rect(rect)
     for tile in tiles_:
         if rect.colliderect(tile):
             collisions.append(tile)
