@@ -6,10 +6,10 @@ from spritesheet import Spritesheet
 
 
 class Tile(pygame.sprite.Sprite):
-    def __init__(self, rect: Union[Rect, Tuple[int, int, int, int]], tiles_group: pygame.sprite.Group, texture: int = 0):
+    def __init__(self, pos: Union[pygame.Vector2, Tuple[int, int]], tiles_group: pygame.sprite.Group, texture: int = 0):
         super().__init__()
-        self.rect = Rect(rect)
-        self.deafult_pos = self.rect.x, self.rect.y
+        self.rect = Rect(pos[0], pos[1], 64, 64)
+        self.default_pos = self.rect.x, self.rect.y
         self.surface = pygame.surface.Surface((self.rect.width, self.rect.height))
         pygame.draw.rect(self.surface, (255, 255, 255), (0, 0, self.rect.width, self.rect.height))
         self.surface.set_colorkey((0, 0, 0))
@@ -22,4 +22,5 @@ class Tile(pygame.sprite.Sprite):
         return self.texture
 
     def update(self, x: int = 0, y: int = 0):
-        self.rect.move_ip(self.deafult_pos[0] + x, self.deafult_pos[1] + y)
+        self.rect.x = self.default_pos[0] + x
+        self.rect.y = self.default_pos[1] + y
