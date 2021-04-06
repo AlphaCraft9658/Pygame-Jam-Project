@@ -74,7 +74,7 @@ class Player(pygame.sprite.Sprite):
         vel_y = self.vel[1]
         if self.collide_mode == 1:
             # if self.c_down:
-            #    vel_y = 0
+            #     vel_y = 0
             pass
 
         self.rect.move_ip(vel_x, vel_y)

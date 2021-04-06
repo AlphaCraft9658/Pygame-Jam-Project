@@ -2,6 +2,7 @@ import buttons
 from player import Player, collision_test
 from tiles import Tile
 from time import time
+from generation import generate_platform
 try:
     import pygame
     from pygame.locals import *
@@ -20,7 +21,6 @@ except ImportError:
     else:
         print("All libraries successfully installed!")
 from typing import Union, Tuple, Optional, Literal, List
-from player import Player
 print("All libraries successfully imported!")
 
 pygame.init()
@@ -31,11 +31,13 @@ pygame.display.set_caption("Pygame Jam Game")
 dt = 0
 last_time = time()
 tiles = []
+platform = []
 tiles_group = pygame.sprite.Group()
-tiles.append(Tile((0, screen.get_height() - 20, screen.get_width(), 20), tiles_group))
-tiles.append(Tile((0, 0, 50, 50), tiles_group, 1))
 player = Player(tiles, tiles_group)
 player_group = pygame.sprite.Group(player)
+metal_animation_frame = [0]
+passed_frames = 0
+generate_platform(screen, platform, tiles, tiles_group, metal_animation_frame)
 
 run = True
 while run:
@@ -61,11 +63,19 @@ while run:
                 player.up = False
             pass
 
-    screen.fill((0, 100, 100))
+    screen.fill((0, 0, 25))
     player_group.update()
     tiles_group.update(player.rect.x, player.rect.x)
     player_group.draw(screen)
     tiles_group.draw(screen)
     pygame.display.update()
     clock.tick(60)
+    passed_frames += 1
+    if passed_frames > 5:
+        if metal_animation_frame[0] < 4:
+            metal_animation_frame[0] += 1
+        else:
+            metal_animation_frame[0] = 0
+        passed_frames = 0
+
 pygame.quit()
