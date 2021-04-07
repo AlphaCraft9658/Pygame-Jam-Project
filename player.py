@@ -85,9 +85,11 @@ class Player(pygame.sprite.Sprite):
             if slope == 15:
                 self.on_ground = False
                 self.rect.move_ip(0, 15)
-                self.vel[0] /= self.vel[0]
                 while self.colliding():
-                    self.rect.move_ip(-self.vel[0], 0)
+                    if self.vel[0] > 0:
+                        self.rect.move_ip(-1, 0)
+                    elif self.vel[0] < 0:
+                        self.rect.move_ip(1, 0)
                 self.vel[0] = 0
                 self.right = False
                 self.left = False
