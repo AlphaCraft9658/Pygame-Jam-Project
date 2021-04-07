@@ -19,15 +19,25 @@ def generate_platform(screen: pygame.Surface, platform: List, tiles: List, tiles
     for i in range((screen.get_width() // 64) + 1):
         platform.append([])
         for n in range((screen.get_height() // 64) + 1):
-            if 8 <= n < 9:
+            if i == 9:
+                for s in range((screen.get_height() // 64) + 1):
+                    platform[i].append(0)
+                break
+            if i == 10:
+                for s in range((screen.get_height() // 64) + 1):
+                    platform[i].append(1)
+                break
+            if 9 <= n < 10:
                 platform[i].append(1)
-            if n >= 9:
+            if n >= 10:
                 platform[i].append(2)
-            if n < 8:
+            if n < 9:
                 platform[i].append(0)
     for col_i, col in enumerate(platform):
         for row_i, row in enumerate(col):
             tiles.append(Tile((col_i * 64, row_i * 64), tiles_group, platform[col_i][row_i], animation_frame))
+    for i in range((screen.get_height() // 64) + 1):
+        tiles.append(Tile((-64, i * 64), tiles_group, 1, animation_frame))
     print(platform)
 
 

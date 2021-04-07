@@ -5,7 +5,7 @@ from pygame.locals import *
 from typing import Union, Tuple, Optional, Literal, List
 
 
-def collision_test(rect: Union[Rect, Tuple[int, int, int, int]], tiles_: List[Tile], mode: Literal[1, 2] = 1):
+def collision_test(rect: Union[Rect, Tuple[int, int, int, int]], tiles_: List[Tile], mode: Literal[1, 2, 3] = 1):
     if mode == 1:
         if not isinstance(rect, Rect):
             rect = Rect(rect)
@@ -14,6 +14,12 @@ def collision_test(rect: Union[Rect, Tuple[int, int, int, int]], tiles_: List[Ti
         return res_list
     elif mode == 2:
         return rect.collidelistall(tiles_)
+    elif mode == 3:
+        collides = False
+        for tile in tiles_:
+            if rect.colliderect(tile.rect) and tile.texture_index != 0:
+                collides = True
+        return collides
 
 
 class Player(pygame.sprite.Sprite):
@@ -21,7 +27,6 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
         self.tiles = tiles
         self.rect = Rect(0, 0, 50, 50)
-        self.collide_rect = self.rect.copy()
         self.surface = pygame.Surface((50, 50))
         self.vel = [0, 0]
         self.left = False
@@ -69,31 +74,29 @@ class Player(pygame.sprite.Sprite):
 
     def update_vel(self):
         self.vel[0] *= .9
-        self.vel[1] += 1
-        vel_x = self.vel[0]
-        vel_y = self.vel[1]
-        if self.collide_mode == 1:
-            # if self.c_down:
-            #     vel_y = 0
-            pass
+        self.vel[1] += .5
 
-        self.rect.move_ip(vel_x, vel_y)
+        self.rect.move_ip(self.vel)
+        if self.colliding():
+            slope = 0
+            while slope < 15 and self.colliding():
+                self.rect.move_ip(0, -1)
+                slope += 1
+            if slope == 15:
+                self.on_ground = False
+                self.rect.move_ip(0, 15)
+                self.vel[0] /= self.vel[0]
+                while self.colliding():
+                    self.rect.move_ip(-self.vel[0], 0)
+                self.vel[0] = 0
+                self.right = False
+                self.left = False
+            else:
+                self.vel[1] = 0
+                self.on_ground = True
 
-    def collide(self) -> bool:
-        return collision_test(self.rect, self.tiles)
-
-    def collect_collisions(self):
-        if self.collide_mode == 1:
-            self.stuck = self.collide()
-            self.rect.move_ip(0, 1)
-            self.c_down = self.collide()
-            self.rect.move_ip(0, -2)
-            self.c_up = self.collide()
-            self.rect.move_ip(1, 1)
-            self.c_right = self.collide()
-            self.rect.move_ip(-2, 0)
-            self.c_left = self.collide()
-            self.rect.move_ip(1, 0)
+    def colliding(self) -> bool:
+        return True if collision_test(self.rect, self.tiles, 3) else False
 
     def update(self):  # physics
         if self.right:
@@ -105,9 +108,7 @@ class Player(pygame.sprite.Sprite):
             self.on_ground = False
 
         self.update_vel()
-        self.collect_collisions()
 
-        # self.vel[1] += .2
         # collisions = self.collide()
         # self.rect.x += self.vel[0]
         # for tile in collisions:

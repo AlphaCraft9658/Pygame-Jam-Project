@@ -61,11 +61,10 @@ while run:
                 player.right = False
             if event.key == K_UP:
                 player.up = False
-            pass
 
     screen.fill((0, 0, 25))
     player_group.update()
-    tiles_group.update(player.rect.x, player.rect.x)
+    tiles_group.update(player.rect.x, player.rect.y)
     player_group.draw(screen)
     tiles_group.draw(screen)
     pygame.display.update()
