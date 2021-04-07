@@ -84,21 +84,18 @@ class Player(pygame.sprite.Sprite):
                 slope += 1
             if slope == 15:
                 self.on_ground = False
-                self.rect.move_ip(0, 15)
-                while self.colliding():
-                    if self.vel[0] > 0:
-                        self.rect.move_ip(-1, 0)
-                    elif self.vel[0] < 0:
-                        self.rect.move_ip(1, 0)
+                self.rect.move_ip(-self.vel[0], 15)
                 self.vel[0] = 0
-                self.right = False
-                self.left = False
+                if self.right:
+                    self.right = False
+                if self.left:
+                    self.left = False
             else:
                 self.vel[1] = 0
                 self.on_ground = True
 
-    def colliding(self) -> bool:
-        return True if collision_test(self.rect, self.tiles, 3) else False
+    def colliding(self, mode: Literal[2, 3] = 3):
+        return True if collision_test(self.rect, self.tiles, mode) else False
 
     def update(self):  # physics
         if self.right:
@@ -108,6 +105,8 @@ class Player(pygame.sprite.Sprite):
         if self.up and self.on_ground:
             self.vel[1] = -12
             self.on_ground = False
+        if not self.on_ground:
+            self.up = False
 
         self.update_vel()
 
