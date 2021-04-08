@@ -23,8 +23,10 @@ def collision_test(rect: Union[Rect, Tuple[int, int, int, int]], tiles_: List[Ti
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, tiles: List[Tile], tiles_group: pygame.sprite.Group):
+    def __init__(self, tiles: List[Tile], tiles_group: pygame.sprite.Group, screen_x: int, screen_y: int,
+                 pos: Optional[pygame.Vector2] = None):
         super().__init__()
+        self.pos: pygame.Vector2 = pos if pos else pygame.Vector2(0, 0)
         self.tiles = tiles
         self.rect = Rect(0, 0, 50, 50)
         self.surface = pygame.Surface((50, 50))
@@ -33,6 +35,9 @@ class Player(pygame.sprite.Sprite):
         self.right = False
         self.up = False
         self.on_ground = False
+        self.screen_x = screen_x
+        self.screen_y = screen_y
+        self.page = [0, 0]
 
         # ########## collide info
 
@@ -41,6 +46,7 @@ class Player(pygame.sprite.Sprite):
         self.c_right = False
         self.c_down = False
         self.stuck = False
+        self.max_vel = 0.025
 
         # ########## collide info end
 
@@ -48,8 +54,11 @@ class Player(pygame.sprite.Sprite):
         self.collide_mode = 1
         # ########## collide mode end
 
+        # ########## setup
         pygame.draw.rect(self.surface, (255, 0, 0), self.rect)
         self.surface.set_colorkey((0, 0, 0))
+        self.respawn()
+        # ########## setup end
 
     @property
     def image(self):
@@ -76,7 +85,7 @@ class Player(pygame.sprite.Sprite):
         self.vel[0] *= .9
         self.vel[1] += .5
 
-        self.rect.move_ip(self.vel)
+        self.rect.move_ip(self.vel[0]/2, self.vel[1]/2)
         if self.colliding():
             slope = 0
             while slope < 15 and self.colliding():
@@ -94,8 +103,32 @@ class Player(pygame.sprite.Sprite):
                 self.vel[1] = 0
                 self.on_ground = True
 
+        self.rect.move_ip(self.vel[0] / 2, self.vel[1] / 2)
+        if self.colliding():
+            slope = 0
+            while slope < 15 and self.colliding():
+                self.rect.move_ip(0, -1)
+                slope += 1
+            if slope == 15:
+                self.on_ground = False
+                self.rect.move_ip(-self.vel[0], 15)
+                self.vel[0] = 0
+                if self.right:
+                    self.right = False
+                if self.left:
+                    self.left = False
+            else:
+                self.vel[1] = 0
+                self.on_ground = True
+
+        # self.vel[0] -= self.vel[0] * self.max_vel
+        self.vel[1] -= self.vel[1] * self.max_vel
+
+    def colliding_with_wall(self):
+        pass
+
     def colliding(self, mode: Literal[2, 3] = 3):
-        return True if collision_test(self.rect, self.tiles, mode) else False
+        return bool(collision_test(self.rect, self.tiles, mode))
 
     def update(self):  # physics
         if self.right:
@@ -103,12 +136,13 @@ class Player(pygame.sprite.Sprite):
         if self.left:
             self.vel[0] -= 1
         if self.up and self.on_ground:
-            self.vel[1] = -12
+            self.vel[1] = -20
             self.on_ground = False
         if not self.on_ground:
             self.up = False
 
         self.update_vel()
+        self.tp_check()
 
         # collisions = self.collide()
         # self.rect.x += self.vel[0]
@@ -125,3 +159,34 @@ class Player(pygame.sprite.Sprite):
         #     if self.vel[1] < 0:
         #         self.rect.top = tile.rect.bottom
         #         self.vel[1] = 1
+    def tp_check(self):
+        if self.rect.x <= 10:
+            self.tp_right()
+        elif self.rect.x > self.screen_x:
+            self.tp_left()
+        if self.rect.y <= 10:
+            self.tp_down()
+        elif self.rect.y > self.screen_y:
+            self.tp_up()
+
+    def tp_right(self):
+        self.page[0] -= 1
+        self.rect.x = self.screen_x
+
+    def tp_left(self):
+        self.page[0] += 1
+        self.rect.x = 11
+
+    def tp_up(self):
+        self.page[1] -= 1
+        self.rect.y = 11
+
+    def tp_down(self):
+        self.page[1] += 1
+        self.rect.y = self.screen_y
+
+    def respawn(self):
+        self.rect.x = self.pos.x
+        self.rect.y = self.pos.y
+        self.vel[0] = 0
+        self.vel[1] = 0
