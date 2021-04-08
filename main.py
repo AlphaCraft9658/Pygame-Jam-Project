@@ -2,12 +2,14 @@ import buttons
 from player import Player, collision_test
 from tiles import Tile
 from time import time
-from generation import generate_platform
+from generation import generate
+
 try:
     import pygame
     from pygame.locals import *
 except ImportError:
     import os
+
     try:
         os.system("pip install pygame --user")
         # noinspection PyUnresolvedReferences
@@ -16,26 +18,29 @@ except ImportError:
     except ImportError:
         print("Could not install pygame! Try installing it manually!")
         from time import sleep
+
         sleep(3)
         exit()
     else:
         print("All libraries successfully installed!")
 from typing import Union, Tuple, Optional, Literal, List
+
 print("All libraries successfully imported!")
 
 pygame.init()
-screen = pygame.display.set_mode((1000, 750))
+screen = pygame.display.set_mode((1024, 768))
 clock = pygame.time.Clock()
 pygame.display.set_caption("Pygame Jam Game")
 
 dt = 0
 last_time = time()
-tiles = []
+# tiles 16 x 12
 platform = []
 tiles_group = pygame.sprite.Group()
-player = Player(tiles, tiles_group, 1000, 750, pygame.Vector2(300, 300))
+generate([0, 0], tiles_group)
+# print(tiles_group.sprites()[0].tile_info.action)
+player = Player(tiles_group, 1024, 768, pygame.Vector2(320, 320))
 player_group = pygame.sprite.Group(player)
-generate_platform(screen, platform, tiles, tiles_group)
 animation_tick = 0
 
 run = True
@@ -73,6 +78,11 @@ while run:
     player_group.draw(screen)
     tiles_group.draw(screen)
     pygame.display.update()
+
+    if player.teleporting:
+        # noinspection PyTypeChecker
+        generate(player.page, tiles_group, (player.rect.x - (player.rect.x % 64)) // 64,
+                 (player.rect.y - (player.rect.y % 64)) // 64)
     clock.tick(60)
 
 pygame.quit()

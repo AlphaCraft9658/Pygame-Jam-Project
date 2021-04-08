@@ -1,5 +1,5 @@
 from time import time
-from tiles import Tile
+from tiles import Tile, TileActionTypes
 import pygame
 from pygame.locals import *
 from typing import Union, Tuple, Optional, Literal, List
@@ -23,11 +23,11 @@ def collision_test(rect: Union[Rect, Tuple[int, int, int, int]], tiles_: List[Ti
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, tiles: List[Tile], tiles_group: pygame.sprite.Group, screen_x: int, screen_y: int,
-                 pos: Optional[pygame.Vector2] = None):
+    def __init__(self, tiles_group: pygame.sprite.Group, screen_x: int, screen_y: int,
+                 pos: Optional[pygame.Vector2] = None, page: Optional[List[int]] = None):
         super().__init__()
         self.pos: pygame.Vector2 = pos if pos else pygame.Vector2(0, 0)
-        self.tiles = tiles
+        self.tiles_group = tiles_group
         self.rect = Rect(0, 0, 50, 50)
         self.surface = pygame.Surface((50, 50))
         self.vel = [0, 0]
@@ -37,7 +37,8 @@ class Player(pygame.sprite.Sprite):
         self.on_ground = False
         self.screen_x = screen_x
         self.screen_y = screen_y
-        self.page = [0, 0]
+        self.spawn_page = page.copy() if page else [0, 0]
+        self.page = page.copy() if page else [0, 0]
 
         # ########## collide info
 
@@ -47,6 +48,9 @@ class Player(pygame.sprite.Sprite):
         self.c_down = False
         self.stuck = False
         self.max_vel = 0.025
+        self.bounced_x = False
+        self.bounced_y = False
+        self.teleporting = False
 
         # ########## collide info end
 
@@ -71,7 +75,8 @@ class Player(pygame.sprite.Sprite):
         rec = self.rect.copy()
         c = []
         for _ in range(100):
-            c = collision_test(rec, self.tiles)
+            # noinspection PyTypeChecker
+            c = collision_test(rec, self.tiles_group.sprites())
             if len(c) != 0:
                 break
             c_v += v_s
@@ -124,13 +129,41 @@ class Player(pygame.sprite.Sprite):
         # self.vel[0] -= self.vel[0] * self.max_vel
         self.vel[1] -= self.vel[1] * self.max_vel
 
-    def colliding_with_wall(self):
-        pass
+    def colliding(self):
+        # noinspection PyTypeChecker
+        c = collision_test(self.rect, self.tiles_group.sprites())
+        for e in c:
+            if e.tile_info.action == TileActionTypes.wall:
+                return True
 
-    def colliding(self, mode: Literal[2, 3] = 3):
-        return bool(collision_test(self.rect, self.tiles, mode))
+    def action_collide(self):
+        # noinspection PyTypeChecker
+        c = collision_test(self.rect, self.tiles_group.sprites())
+        bcd = False
+        for e in c:
+            if e.tile_info.action == TileActionTypes.kill:
+                self.respawn()
+                break
+            elif e.tile_info.action == TileActionTypes.speed:
+                self.vel[0] *= e.tile_info.speed_applier
+                self.vel[1] *= e.tile_info.speed_applier
+            elif e.tile_info.action == TileActionTypes.bounce:
+                bcd = True
+                if self.rect.x + 25 < e.rect.x or self.rect.x > e.rect.x + 32:
+                    if not self.bounced_x:
+                        self.bounced_x = True
+                        self.vel[0] *= -e.tile_info.bounce_diff
+                if self.rect.y + 25 < e.rect.y or self.rect.y > e.rect.y + 32:
+                    if not self.bounced_y:
+                        self.bounced_y = True
+                        self.vel[1] *= -e.tile_info.bounce_diff
+
+        if not bcd:
+            self.bounced_x = False
+            self.bounced_y = False
 
     def update(self):  # physics
+        self.teleporting = False
         if self.right:
             self.vel[0] += 1
         if self.left:
@@ -143,6 +176,7 @@ class Player(pygame.sprite.Sprite):
 
         self.update_vel()
         self.tp_check()
+        self.action_collide()
 
         # collisions = self.collide()
         # self.rect.x += self.vel[0]
@@ -172,21 +206,26 @@ class Player(pygame.sprite.Sprite):
     def tp_right(self):
         self.page[0] -= 1
         self.rect.x = self.screen_x
+        self.teleporting = True
 
     def tp_left(self):
         self.page[0] += 1
         self.rect.x = 11
+        self.teleporting = True
 
     def tp_up(self):
         self.page[1] -= 1
         self.rect.y = 11
+        self.teleporting = True
 
     def tp_down(self):
         self.page[1] += 1
         self.rect.y = self.screen_y
+        self.teleporting = True
 
     def respawn(self):
         self.rect.x = self.pos.x
         self.rect.y = self.pos.y
         self.vel[0] = 0
         self.vel[1] = 0
+        self.page = self.spawn_page.copy()

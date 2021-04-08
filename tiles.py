@@ -7,30 +7,31 @@ from spritesheet import Spritesheet
 
 
 class TileActionTypes(Enum):
-    wall = 0
+    none = 0
+    wall = 1
     bounce = 2
     kill = 3
     speed = 4
 
 
 class TileInfo:
-    def __init__(self, action: TileActionTypes, bounce_diff: float = 1, speed_applier: int = 0):
+    def __init__(self, action: TileActionTypes, bounce_diff: float = 1, speed_applier: int = 1):
         self.speed_applier = speed_applier
         self.bounce_diff = bounce_diff
         self.action = action
 
 
 class Tile(pygame.sprite.Sprite):
-    def __init__(self, pos: Union[pygame.Vector2, Tuple[int, int]], tiles_group: pygame.sprite.Group, texture: int = 0,
+    def __init__(self, pos: Union[pygame.Vector2, Tuple[int, int]], texture: int = 0,
                  tile_info: Optional[TileInfo] = None):
         super().__init__()
-        self.tile_info = tile_info if tile_info else TileInfo(TileActionTypes.wall)
+        pos = (pos.x, pos.y) if isinstance(pos, pygame.Vector2) else pos
+        self.tile_info = tile_info if tile_info else TileInfo(TileActionTypes.none)
         self.rect = Rect(pos[0], pos[1], 64, 64)
         # self.default_pos = self.rect.x, self.rect.y
         self.surface = pygame.surface.Surface((self.rect.width, self.rect.height))
         pygame.draw.rect(self.surface, (255, 255, 255), (0, 0, self.rect.width, self.rect.height))
         self.surface.set_colorkey((0, 0, 0))
-        tiles_group.add(self)
         self.animation_frame = 0
         self.sprite_sheet = Spritesheet("img/spritesheet.png", 100, 100)
         self.texture_index = texture
