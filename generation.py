@@ -6,7 +6,7 @@ from tiles import Tile, TileActionTypes, TileInfo
 from typing import List, Literal, Dict
 
 SEED = random.randint(0, 1000)
-print(SEED)
+print("seed: ", SEED)
 
 SPAWN_PAGE = [[0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 2, 1],
               [0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 1, 1],
@@ -39,7 +39,13 @@ def generate_sprites(platform: List[List[int]], tiles_group: pygame.sprite.Group
 
 
 def generate_empty():
-    return [[0]*12]*16
+    ret = []
+    for x in range(16):
+        line = []
+        for y in range(12):
+            line.append(0)
+        ret.append(line)
+    return ret
 
 
 def generate_page(page: List[int]):
@@ -63,15 +69,14 @@ def set_seed(page: List[int]):
         p2 = 1
     else:
         p2 = page[1]
-
-    random.seed((((p1 + p2) * SEED) % (p1**2))//(p2**2))
+    random.seed((p1 + p2) * SEED)
 
 
 def real_generate(page: List[int]):
     lst = generate_empty()
     set_seed(page)
-    lst = random_spawn(lst, 1, 5, 6)
-    lst = random_spawn(lst, 2, 5, 6)
+    lst = random_spawn(lst, 1, 20, 50)
+    lst = random_spawn(lst, 2, 20, 50)
 
     # if page[0] >= 0:
     #     p1 = page[0] + 1
@@ -88,9 +93,8 @@ def real_generate(page: List[int]):
 def random_spawn(lst: List[List[int]], block_id: int, mini: int, maxi: int):
     times = random.randint(mini, maxi)
     for c in range(times):
-        x = random.randint(0, 15)
-        y = random.randint(0, 11)
-        # print(x, y)
+        x = random.randint(0, len(lst)-1)
+        y = random.randint(0, len(lst[0])-1)
         lst[x][y] = block_id
     return lst
 
@@ -116,23 +120,26 @@ def get_tile(tile_id: int, x_pos: int, y_pos: int):
 
 
 if __name__ == '__main__':
-    pygame.init()
-    screen = pygame.display.set_mode((1000, 750))
-    pygame.display.set_caption("Generation")
-    tiles_group = pygame.sprite.Group()
-    tiles = []
-    clock = pygame.time.Clock()
-    platform = []
-    print(type(platform))
-    generate_platform(screen, platform, tiles, tiles_group)
-    run = True
-    while run:
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                run = False
-
-        screen.fill((0, 0, 25))
-        tiles_group.draw(screen)
-        pygame.display.update()
-        clock.tick(60)
-    pygame.quit()
+    test = generate_empty()
+    test[2][2] = 1
+    print(test)
+    # pygame.init()
+    # screen = pygame.display.set_mode((1000, 750))
+    # pygame.display.set_caption("Generation")
+    # tiles_group = pygame.sprite.Group()
+    # tiles = []
+    # clock = pygame.time.Clock()
+    # platform = []
+    # print(type(platform))
+    # generate_platform(screen, platform, tiles, tiles_group)
+    # run = True
+    # while run:
+    #     for event in pygame.event.get():
+    #         if event.type == QUIT:
+    #             run = False
+    #
+    #     screen.fill((0, 0, 25))
+    #     tiles_group.draw(screen)
+    #     pygame.display.update()
+    #     clock.tick(60)
+    # pygame.quit()
